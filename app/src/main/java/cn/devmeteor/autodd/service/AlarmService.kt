@@ -80,10 +80,10 @@ class AlarmService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        val str=SimpleDateFormat("yyyy-MM-dd 00:01:00", Locale.getDefault()).format(Date())
-//        time=SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(str)!!.time
-        val str=SimpleDateFormat("yyyy-MM-dd HH:mm:00", Locale.getDefault()).format(Date())
-        time=SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(str)!!.time.plus(60*1000)
+        val str=SimpleDateFormat("yyyy-MM-dd 00:01:00", Locale.getDefault()).format(Date())
+        time=SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(str)!!.time.plus(AlarmManager.INTERVAL_DAY)
+//        val str=SimpleDateFormat("yyyy-MM-dd HH:mm:00", Locale.getDefault()).format(Date())
+//        time=SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(str)!!.time.plus(60*1000)
         alarmManager!!.setExact(AlarmManager.RTC_WAKEUP, time!!, pendingIntent)
         println(SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(time!!)))
         return START_NOT_STICKY

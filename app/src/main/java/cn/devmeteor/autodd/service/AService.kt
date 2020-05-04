@@ -80,12 +80,13 @@ class AService : AccessibilityService() {
                 performGlobalAction(GLOBAL_ACTION_HOME)
                 Thread.sleep(500)
                 Util.execShell("am force-stop com.alibaba.android.rimet")
+                //有时候能打开QQ但不能进入聊天界面，原因未知
                 val intent=Intent(
                     Intent.ACTION_VIEW,
                     //打开好友聊天界面的协议，IgnoreConstant.qqNum是好友QQ号字符串
-//                    Uri.parse("mqqwpa://im/chat?chat_type=wpa&uin=${IgnoreConstant.qqNum}&version=1")
+//                    Uri.parse("mqqwpa://im/chat?chat_type=wpa&uin=${IgnoreConstant.qqNum}")
                     //打开群聊天界面的协议，IgnoreConstant.groupNum是QQ群号
-                    Uri.parse("mqqwpa://im/chat?chat_type=group&uin=${IgnoreConstant.groupNum}&version=1")
+                    Uri.parse("mqqwpa://im/chat?chat_type=group&uin=${IgnoreConstant.groupNum}")
                 )
                 intent.flags=Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
@@ -99,7 +100,6 @@ class AService : AccessibilityService() {
                 val clipData=ClipData.newPlainText("label","无异常")
                 clipboardManager.setPrimaryClip(clipData)
                 val input=rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.tencent.mobileqq:id/input")
-                println(input.size)
                 if (input.size!=0) {
                     input[0].performAction(AccessibilityNodeInfo.ACTION_CLICK)
                     input[0].performAction(AccessibilityNodeInfo.ACTION_PASTE)
