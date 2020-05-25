@@ -6,6 +6,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import cn.devmeteor.autodd.R
 import cn.devmeteor.autodd.service.AlarmService
+import com.blankj.utilcode.util.LogUtils
 
 
 class MainActivity : AppCompatActivity() {
@@ -13,6 +14,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        LogUtils.i("AutoDD Started")
     }
 
     fun record(view: View) {
