@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.text.TextUtils
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -51,29 +52,30 @@ class AService : AccessibilityService() {
                 } catch (e: Exception) {
                 }
             }
+            //以下部分由于是网页内容，没有text和id，只能用Android SDK的ddms工具分析界面结构，按结构找到要点击的控件。
             if (tabWork && !smartTable) {
                 val initPos = arrayOf(0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0)
+                val waitPos = arrayOf(0, 0, 0, 1, 0, 2, 0, 0, 0, 1)
                 click(initPos, waitPos)
             }
             if (smartTable && !fill) {
                 val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 0, 1, 2, 0, 0, 1, 2, 1, 0)
+                val waitPos = arrayOf(0, 0, 0, 1, 2, 0, 0, 1, 3, 0)
                 click(initPos, waitPos)
             }
             if (fill && !goFill) {
                 val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 4)
+                val waitPos = arrayOf(0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 4)
                 click(initPos, waitPos)
             }
             if (goFill && !today) {
                 val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 0, 1, 1, 1, 1)
+                val waitPos = arrayOf(0, 0, 0, 1, 1, 0, 0)
                 click(initPos, waitPos)
             }
             if (today && !submit) {
                 val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 0, 2)
+                val waitPos = arrayOf(0, 0, 0, 2)
                 click(initPos, waitPos)
             }
             if (submit && !qqStart) {
@@ -132,6 +134,21 @@ class AService : AccessibilityService() {
                 }
             }
         }
+    }
+
+    private fun findNodeInfosByContent(
+        nodeInfo: AccessibilityNodeInfo, content: String
+    ): AccessibilityNodeInfo? {
+        if (TextUtils.isEmpty(content)) {
+            return null;
+        }
+        for (i in 0..nodeInfo.childCount) {
+            val node = nodeInfo.getChild(i);
+            if (content == node.contentDescription) {
+                return node;
+            }
+        }
+        return null;
     }
 
     private fun click(initPos: Array<Int>, waitPos: Array<Int>, sleepTime: Long = 5000) {
