@@ -1,13 +1,13 @@
 package cn.devmeteor.autodd.service
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.text.TextUtils
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -52,32 +52,17 @@ class AService : AccessibilityService() {
                 } catch (e: Exception) {
                 }
             }
-            //以下部分由于是网页内容，没有text和id，只能用Android SDK的ddms工具分析界面结构，按结构找到要点击的控件。
-            if (tabWork && !smartTable) {
-                val initPos = arrayOf(0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 1, 0, 2, 0, 0, 0, 1)
-                click(initPos, waitPos)
-            }
-            if (smartTable && !fill) {
-                val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 1, 2, 0, 0, 1, 3, 0)
-                click(initPos, waitPos)
-            }
-            if (fill && !goFill) {
-                val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 4)
-                click(initPos, waitPos)
-            }
-            if (goFill && !today) {
-                val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 1, 1, 0, 0)
-                click(initPos, waitPos)
-            }
-            if (today && !submit) {
-                val initPos = arrayOf(0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-                val waitPos = arrayOf(0, 0, 0, 2)
-                click(initPos, waitPos)
-            }
+            //网页内文字已属于text，但使用findAccessibilityNodeInfosByText找不到目标组件，原因未知
+            if (tabWork && !smartTable)
+                click("智能填表", "com.alibaba.android.rimet:id/h5_pc_container")
+            if (smartTable && !fill)
+                click("填写")
+            if (fill && !goFill)
+                click("立即填写")
+            if (goFill && !today)
+                click("今天")
+            if (today && !submit)
+                click("提交")
             if (submit && !qqStart) {
                 performGlobalAction(GLOBAL_ACTION_HOME)
                 Thread.sleep(500)
@@ -136,29 +121,16 @@ class AService : AccessibilityService() {
         }
     }
 
-    private fun findNodeInfosByContent(
-        nodeInfo: AccessibilityNodeInfo, content: String
-    ): AccessibilityNodeInfo? {
-        if (TextUtils.isEmpty(content)) {
-            return null;
-        }
-        for (i in 0..nodeInfo.childCount) {
-            val node = nodeInfo.getChild(i);
-            if (content == node.contentDescription) {
-                return node;
-            }
-        }
-        return null;
-    }
-
-    private fun click(initPos: Array<Int>, waitPos: Array<Int>, sleepTime: Long = 5000) {
-        var target = rootInActiveWindow
+    private fun click(
+        content: String,
+        webId: String = "com.alibaba.android.rimet:id/webview_frame",
+        sleepTime: Long = 5000
+    ) {
+        var target = rootInActiveWindow.findAccessibilityNodeInfosByViewId(webId)[0].getChild(0)
         try {
-            for (i in initPos)
-                target = target.getChild(i)
             if (target.childCount != 0) {
-                for (w in waitPos)
-                    target = target.getChild(w)
+                findTargetNode(target, content)
+                target = targetNode
                 target.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                 target.recycle()
                 Thread.sleep(sleepTime)
@@ -172,6 +144,20 @@ class AService : AccessibilityService() {
                 flagIndex++
             }
         } catch (e: Exception) {
+            println(e.message)
+        }
+    }
+
+    private lateinit var targetNode: AccessibilityNodeInfo
+
+    private fun findTargetNode(rootNode: AccessibilityNodeInfo, content: String) {
+        for (i in 0 until rootNode.childCount) {
+            val child = rootNode.getChild(i)
+            if (content == "${child.text}") {
+                targetNode = child
+            } else if (child.childCount > 0) {
+                findTargetNode(child, content)
+            }
         }
     }
 
