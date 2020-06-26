@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -15,6 +16,7 @@ import androidx.annotation.RequiresApi
 import cn.devmeteor.autodd.Util
 import cn.devmeteor.autodd.constant.AppConstant
 import cn.devmeteor.autodd.constant.IgnoreConstant
+import java.util.*
 
 class AService : AccessibilityService() {
 
@@ -27,6 +29,37 @@ class AService : AccessibilityService() {
     private var today = false
     private var submit = false
     private var qqStart = false
+
+    private var timer: Timer? = null
+    private var timerTask: TimerTask? = null
+
+    private fun clearTimer() {
+        if (timer != null)
+            timer!!.cancel()
+        timer = null
+        if (timerTask != null)
+            timerTask!!.cancel()
+        timerTask = null
+    }
+
+    private fun startTimer() {
+        timer = Timer()
+        timerTask = object : TimerTask() {
+            override fun run() {
+//                performGlobalAction(GLOBAL_ACTION_HOME)
+//                Thread.sleep(500)
+//                Util.execShell("am force-stop com.alibaba.android.rimet")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    disableSelf()
+                }
+                clearTimer()
+            }
+        }
+        timer!!.schedule(timerTask, 15000)
+    }
 
     override fun onInterrupt() {
         Log.i(AppConstant.APP_TAG, "操作失败")
@@ -64,6 +97,7 @@ class AService : AccessibilityService() {
             if (today && !submit)
                 click("提交")
             if (submit && !qqStart) {
+                clearTimer()
                 performGlobalAction(GLOBAL_ACTION_HOME)
                 Thread.sleep(500)
                 Util.execShell("am force-stop com.alibaba.android.rimet")
@@ -107,13 +141,6 @@ class AService : AccessibilityService() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
                 }
-                tabWork = false
-                smartTable = false
-                fill = false
-                goFill = false
-                today = false
-                submit = false
-                qqStart = false
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     disableSelf()
                 }
@@ -126,6 +153,8 @@ class AService : AccessibilityService() {
         webId: String = "com.alibaba.android.rimet:id/webview_frame",
         sleepTime: Long = 5000
     ) {
+        if (timer == null)
+            startTimer()
         var target = rootInActiveWindow.findAccessibilityNodeInfosByViewId(webId)[0].getChild(0)
         try {
             if (target.childCount != 0) {
@@ -133,6 +162,7 @@ class AService : AccessibilityService() {
                 target = targetNode
                 target.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                 target.recycle()
+                println(timer == null)
                 Thread.sleep(sleepTime)
                 when (flagIndex) {
                     0 -> smartTable = true
@@ -154,6 +184,7 @@ class AService : AccessibilityService() {
         for (i in 0 until rootNode.childCount) {
             val child = rootNode.getChild(i)
             if (content == "${child.text}") {
+                clearTimer()
                 targetNode = child
             } else if (child.childCount > 0) {
                 findTargetNode(child, content)

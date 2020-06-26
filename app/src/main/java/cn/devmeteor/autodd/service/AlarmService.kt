@@ -82,7 +82,7 @@ class AlarmService : Service() {
         intent.action = AppConstant.ALARM_ACTION
         pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0)
 //        val str=SimpleDateFormat("yyyy-MM-dd 06:30:00", Locale.getDefault()).format(Date())
-        val str=SimpleDateFormat("yyyy-MM-dd 01:00:00", Locale.getDefault()).format(Date())
+        val str=SimpleDateFormat("yyyy-MM-dd 05:00:00", Locale.getDefault()).format(Date())
         time=SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(str)!!.time.plus(AlarmManager.INTERVAL_DAY)
 //        val str=SimpleDateFormat("yyyy-MM-dd HH:mm:00", Locale.getDefault()).format(Date())
 //        time=SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(str)!!.time.plus(60*1000)
