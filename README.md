@@ -12,7 +12,7 @@
 
 ![](ignore.png)
 
-**cmds是解锁点击命令的数组，qqNum和groupNum分别是发送消息的好友QQ号和群号。**
+**cmds是解锁点击命令的数组，qqNum和groupNum分别是发送消息的好友QQ号和群号，groupName和orgName分别表示签到到群名和组织名。**
 
 其中shell命令部分实现模拟滑动锁屏页面和点击输入锁屏密码（需要root权限），无障碍（Accessibility）部分实现钉钉内提交表单和QQ内发送消息，定时部分（AlarmManager）实现在一定周期内定时执行任务。
 

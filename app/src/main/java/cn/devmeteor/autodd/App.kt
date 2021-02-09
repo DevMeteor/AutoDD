@@ -14,7 +14,7 @@ class App:Application() {
         config.isLogSwitch = true
         config.setConsoleSwitch(true)
         config.isLog2FileSwitch = true
-        config.setDir(Environment.getExternalStorageDirectory())
+        config.setDir(externalCacheDir)
         config.filePrefix = "AutoDD"
     }
 }

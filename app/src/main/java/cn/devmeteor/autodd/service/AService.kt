@@ -1,12 +1,11 @@
 package cn.devmeteor.autodd.service
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -46,9 +45,6 @@ class AService : AccessibilityService() {
         timer = Timer()
         timerTask = object : TimerTask() {
             override fun run() {
-//                performGlobalAction(GLOBAL_ACTION_HOME)
-//                Thread.sleep(500)
-//                Util.execShell("am force-stop com.alibaba.android.rimet")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
                 }
@@ -74,12 +70,12 @@ class AService : AccessibilityService() {
         if (pkgName == "com.alibaba.android.rimet") {
             if (!tabWork) {
                 try {
-                    Thread.sleep(6000)
-                    val infos = rootInActiveWindow.findAccessibilityNodeInfosByText("工作台")
-                    for (info in infos) {
-                        info?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                        info.recycle()
-                    }
+                    Thread.sleep(10000)
+//                    val infos = rootInActiveWindow.findAccessibilityNodeInfosByText("工作台")
+                    val info =
+                        rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.alibaba.android.rimet:id/home_app_recycler_view")[0]
+                    info.getChild(2).performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    info.recycle()
                     tabWork = true
                     Thread.sleep(5000)
                 } catch (e: Exception) {
@@ -97,7 +93,57 @@ class AService : AccessibilityService() {
             if (today && !submit)
                 click("提交")
             if (submit && !qqStart) {
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                Thread.sleep(500)
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                Thread.sleep(500)
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                Thread.sleep(500)
                 clearTimer()
+                val info =
+                    rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.alibaba.android.rimet:id/home_app_recycler_view")[0]
+                info.getChild(0).performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                info.recycle()
+                Thread.sleep(500)
+                val group =
+                    rootInActiveWindow.findAccessibilityNodeInfosByText(IgnoreConstant.groupName)[0]
+                val rect = Rect()
+                group.getBoundsInScreen(rect)
+                group.recycle()
+                Util.execShell("input tap ${rect.centerX()} ${rect.centerY()}")
+                Thread.sleep(500)
+                val more =
+                    rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.alibaba.android.rimet:id/add_app")[0]
+                more.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                more.recycle()
+                Thread.sleep(500)
+                val viewPager =
+                    rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.alibaba.android.rimet:id/chat_app_pager")[0]
+                viewPager.getBoundsInScreen(rect)
+                viewPager.recycle()
+                Util.execShell("input swipe ${rect.centerX() + 500} ${rect.centerY()} ${rect.centerX() - 500} ${rect.centerY()}")
+                Thread.sleep(2000)
+                val item = rootInActiveWindow.findAccessibilityNodeInfosByText("签到")
+                for (view in item) {
+                    if (view.viewIdResourceName == "com.alibaba.android.rimet:id/chat_app_button_title") {
+                        view.parent.getBoundsInScreen(rect)
+                        Util.execShell("input tap ${rect.centerX()} ${rect.centerY()}")
+                        Thread.sleep(500)
+                    }
+                    view.recycle()
+                }
+                val org =
+                    rootInActiveWindow.findAccessibilityNodeInfosByText(IgnoreConstant.orgName)[0]
+                org.getBoundsInScreen(rect)
+                org.recycle()
+                Util.execShell("input tap ${rect.centerX()} ${rect.centerY()}")
+                Thread.sleep(2000)
+                rootInActiveWindow.getBoundsInScreen(rect)
+                Util.execShell("input tap ${rect.centerX()} ${rect.centerY()}")
+                Thread.sleep(1000)
+                rootInActiveWindow.getBoundsInScreen(rect)
+                Util.execShell("input tap ${rect.centerX()} ${rect.bottom - 200}")
+                Thread.sleep(500)
                 performGlobalAction(GLOBAL_ACTION_HOME)
                 Thread.sleep(500)
                 Util.execShell("am force-stop com.alibaba.android.rimet")
@@ -105,9 +151,9 @@ class AService : AccessibilityService() {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
                     //打开好友聊天界面的协议，IgnoreConstant.qqNum是好友QQ号字符串
-//                    Uri.parse("mqqwpa://im/chat?chat_type=wpa&uin=${IgnoreConstant.qqNum}")
+                    Uri.parse("mqqwpa://im/chat?chat_type=wpa&uin=${IgnoreConstant.qqNum}")
                     //打开群聊天界面的协议，IgnoreConstant.groupNum是QQ群号
-                    Uri.parse("mqqwpa://im/chat?chat_type=group&uin=${IgnoreConstant.groupNum}")
+//                    Uri.parse("mqqwpa://im/chat?chat_type=group&uin=${IgnoreConstant.groupNum}")
                 )
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
@@ -123,14 +169,16 @@ class AService : AccessibilityService() {
                 clipboardManager.setPrimaryClip(clipData)
                 val input =
                     rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.tencent.mobileqq:id/input")
-                if (input.size != 0) {
-                    input[0].performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    input[0].performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                for (i in input) {
+                    i.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
+                    i.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                    i.recycle()
                 }
                 val send =
                     rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.tencent.mobileqq:id/fun_btn")
                 if (send.size != 0)
                     send[0].performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                send[0]?.recycle()
                 Thread.sleep(1500)
                 performGlobalAction(GLOBAL_ACTION_BACK)
                 Thread.sleep(1000)
